@@ -44,6 +44,10 @@ public class VendedorDaoJDBC implements VendedorDao {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		try {
+			
+			//COMANDO SQL PARA PUXAR OS DADOS QUE QUEREMOS 
+			// USANDO O ID DO PARAMETRO PARA DIZER QUAL VENDEDOR QUEREMOS BUSCAR
+			
 			st = connect.prepareStatement(
 					"SELECT seller.*,department.Name as DepName "
 					+ "FROM seller INNER JOIN department "
@@ -52,19 +56,16 @@ public class VendedorDaoJDBC implements VendedorDao {
 			
 					st.setInt(1, id);
 					rs = st.executeQuery();
+		 
+					// IF SENDO USADO PARA SABER SE RETORNOU ALGUM VENDEDOR
+					// INSTACIANDO OS OBJETOS PARA QUAL VAMOS ATRIBUIR OS DADOS QUE FORAM PASSADOS DO MYSQL
+					
 					if(rs.next()) {
 				
-				Departamento departamento = new Departamento();
-				departamento.setId(rs.getInt("DepartmentId"));
-				departamento.setName(rs.getString("DepName"));
+				Departamento departamento = instaciarDepartamento(rs);
 				
-				Vendedor objV = new Vendedor();
-				objV.setId(rs.getInt("Id"));
-				objV.setNome(rs.getString("Name"));
-				objV.setEmail(rs.getString("Email"));
-				objV.setSalario(rs.getDouble("BaseSalary"));
-				objV.setDataNascimento(rs.getDate("BirthDate"));
-				objV.setDepartamento(departamento);
+				Vendedor objV = instaciarVendedor(rs, departamento);
+				
 			}
 			return null;
 		}
@@ -76,6 +77,28 @@ public class VendedorDaoJDBC implements VendedorDao {
 			DB.closeResultSet(rs);
 		}
 		
+	}
+
+	private Vendedor instaciarVendedor(ResultSet rs, Departamento departamento) throws SQLException {
+		Vendedor objV = new Vendedor();
+		
+		objV.setId(rs.getInt("Id"));
+		objV.setNome(rs.getString("Name"));
+		objV.setEmail(rs.getString("Email"));
+		objV.setSalario(rs.getDouble("BaseSalary"));
+		objV.setDataNascimento(rs.getDate("BirthDate"));
+		objV.setDepartamento(departamento);
+		
+		return objV;
+	}
+
+	private Departamento instaciarDepartamento(ResultSet rs) throws SQLException {
+		Departamento departamento = new Departamento();
+		
+		departamento.setId(rs.getInt("DepartmentId"));
+		departamento.setName(rs.getString("DepName"));
+		
+		return departamento;
 	}
 
 	@Override
