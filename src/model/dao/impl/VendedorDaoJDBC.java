@@ -82,32 +82,51 @@ public class VendedorDaoJDBC implements VendedorDao {
 		
 	}
 
-	private Vendedor instaciarVendedor(ResultSet rs, Departamento departamento) throws SQLException {
-		Vendedor objV = new Vendedor();
-		
-		objV.setId(rs.getInt("Id"));
-		objV.setNome(rs.getString("Name"));
-		objV.setEmail(rs.getString("Email"));
-		objV.setSalario(rs.getDouble("BaseSalary"));
-		objV.setDataNascimento(rs.getDate("BirthDate"));
-		objV.setDepartamento(departamento);
-		
-		return objV;
-	}
-
-	private Departamento instaciarDepartamento(ResultSet rs) throws SQLException {
-		Departamento departamento = new Departamento();
-		
-		departamento.setId(rs.getInt("DepartmentId"));
-		departamento.setName(rs.getString("DepName"));
-		
-		return departamento;
-	}
-
+	
 	@Override
 	public List<Vendedor> findAll() {
 	
-		return null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			
+			
+			st = connect.prepareStatement(
+					
+					"SELECT seller.*,department.Name as DepName "
+					+ "FROM seller INNER JOIN department "
+					+"ON seller.DepartmentId = department.Id "
+					+" ORDER BY Name ");
+			
+					
+					rs = st.executeQuery();
+		 
+					List<Vendedor> lista = new ArrayList<Vendedor>();
+					Map <Integer, Departamento> map = new HashMap<>();
+					
+					while (rs.next()) {
+				
+						Departamento dep = map.get(rs.getInt("DepartmentId"));
+				
+				if (dep == null) {
+					dep = instaciarDepartamento(rs);
+					map.put(rs.getInt("DepartamentId"),dep);
+				}
+				Vendedor objV = instaciarVendedor(rs, dep);
+				lista.add(objV);
+				
+			}
+			return lista;
+		}
+		catch(SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+		}
+		
+	
 	}
 
 	@Override
@@ -154,5 +173,28 @@ public class VendedorDaoJDBC implements VendedorDao {
 		}
 		
 	}
+	private Vendedor instaciarVendedor(ResultSet rs, Departamento departamento) throws SQLException {
+		Vendedor objV = new Vendedor();
+		
+		objV.setId(rs.getInt("Id"));
+		objV.setNome(rs.getString("Name"));
+		objV.setEmail(rs.getString("Email"));
+		objV.setSalario(rs.getDouble("BaseSalary"));
+		objV.setDataNascimento(rs.getDate("BirthDate"));
+		objV.setDepartamento(departamento);
+		
+		return objV;
+	}
+
+	private Departamento instaciarDepartamento(ResultSet rs) throws SQLException {
+		Departamento departamento = new Departamento();
+		
+		departamento.setId(rs.getInt("DepartmentId"));
+		departamento.setName(rs.getString("DepName"));
+		
+		return departamento;
+	}
+	
+
    
 }
